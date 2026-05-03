@@ -221,7 +221,6 @@
     </div>
 
     <script>
-        // Disable Right-Click view options
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
@@ -229,7 +228,7 @@
             }
         };
 
-        // Supabase Database Connection Details
+        // Complete Supabase Configuration
         const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
         const SUPABASE_KEY = "sb_publishable_4tR9wcZM3E9co59Xbg4nvQ_mI5lnmE3";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -242,7 +241,7 @@
         }
 
         function verifyAdmin() {
-            if (document.getElementById('accessID').value === SECRET_KEY) {
+            if(document.getElementById('accessID').value === SECRET_KEY) {
                 document.getElementById('admin-login').classList.add('hidden');
                 document.getElementById('teacher-section').classList.remove('hidden');
             } else { alert("Invalid Teacher Access ID!"); }
@@ -285,14 +284,13 @@
             const nameInput = clean(document.getElementById('studentName').value);
             const idInput = clean(document.getElementById('studentID').value);
             const status = document.getElementById('status');
-            
             if (!nameInput || !idInput) return alert("Please enter Name and Admission Number");
 
-            status.innerText = "Querying Database...";
+            status.innerText = "Querying Terminal Database...";
             status.style.color = "blue";
 
             try {
-                // Fetch student performance data straight from Supabase instead of Apps Script
+                // Retrieve all existing records directly from Supabase
                 const { data: rawData, error } = await supabaseClient
                     .from('analysis')
                     .select('*');
@@ -305,33 +303,14 @@
                     return;
                 }
 
-                // Normalizing field names
+                // Standardizing response properties to map to previous processing format
                 const rows = rawData.map(r => ({
-                    Name: r.student_name || r.Name,
-                    ID: r.student_id || r.ID,
-                    Gender: r.gender || r.Gender,
-                    Age: r.age || r.Age,
-                    SchoolName: r.school_name || r.SchoolName,
-                    Class: r.class || r.Class,
-                    Term: r.term || r.Term,
-                    Session: r.session || r.Session,
-                    Subject: r.subject || r.Subject,
-                    CA1: r.ca_score1 || r.ca1 || r.CA1,
-                    CA2: r.ca_score2 || r.ca2 || r.CA2,
-                    CA3: r.ca_score3 || r.ca3 || r.CA3,
-                    Exam: r.exam_score || r.exam || r.Exam,
-                    Total: r.total_score || r.total || r.Total,
-                    Grade: r.grade || r.Grade,
-                    Email: r.email || r.Email,
-                    Phone: r.phone || r.Phone,
-                    Neatness: r.neatness || r.Neatness,
-                    Obedience: r.obedience || r.Obedience,
-                    Punctuality: r.punctuality || r.Punctuality,
-                    Attentiveness: r.attentiveness || r.Attentiveness,
-                    Initiative: r.initiative || r.Initiative,
-                    SelfControl: r.self_control || r.selfControl || r.SelfControl,
-                    TeacherRemark: r.remark || r.teacher_remark || r.TeacherRemark,
-                    PrincipalName: r.principal_name || r.PrincipalName
+                    Name: r.student_name, ID: r.student_id, Gender: r.gender, Age: r.age,
+                    SchoolName: r.school_name, Class: r.class, Term: r.term, Session: r.session,
+                    Subject: r.subject, CA1: r.ca_score1, CA2: r.ca_score2, CA3: r.ca_score3, Exam: r.exam_score,
+                    Total: r.total_score, Grade: r.grade, Email: r.email, Phone: r.phone,
+                    Neatness: r.neatness, Obedience: r.obedience, Punctuality: r.punctuality, Attentiveness: r.attentiveness,
+                    Initiative: r.initiative, SelfControl: r.self_control, TeacherRemark: r.remark, PrincipalName: r.principal_name
                 }));
 
                 let studentsMap = {};
@@ -393,7 +372,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                status.innerText = "Error accessing Supabase.";
+                status.innerText = "Error accessing Supabase Database.";
             }
         }
 
@@ -455,13 +434,11 @@
 
         async function saveData(){
             const stat = document.getElementById("upload-status");
-            stat.innerText = "Processing records and computing grades...";
-            
+            stat.innerText = "Saving student profile and performance...";
             let boxes = document.querySelectorAll("#subjects .subject-box");
 
             let payloadsToSave = [];
-            
-            // Extract common bio information
+
             const name = document.getElementById("name").value.trim();
             const id = document.getElementById("id").value.trim();
             const gender = document.getElementById("gender").value.trim();
@@ -473,30 +450,28 @@
             const email = document.getElementById("email").value.trim();
             const phone = document.getElementById("phone").value.trim();
             
-            // Extract core traits
             const neatness = document.getElementById("neatness").value;
             const obedience = document.getElementById("obedience").value;
             const punctuality = document.getElementById("punctuality").value;
             const attentiveness = document.getElementById("attentiveness").value;
             const initiative = document.getElementById("initiative").value;
             const selfControl = document.getElementById("selfControl").value;
-            
             const teacherRemark = document.getElementById("teacherRemark").value.trim();
             const principalName = document.getElementById("principalName").value.trim();
 
             if (!name || !id || !className || !term) {
-                stat.innerText = "❌ Name, ID, Class, and Term are required.";
+                stat.innerText = "❌ Student Name, ID, Class, and Term are required.";
                 return;
             }
 
-            for (let b of boxes) {
+            for(let b of boxes){
                 let subName = b.querySelector(".subject").value.trim();
                 if(!subName) continue;
 
-                let c1 = Number(b.querySelector(".ca1").value || 0); 
-                let c2 = Number(b.querySelector(".ca2").value || 0); 
-                let c3 = Number(b.querySelector(".ca3").value || 0); 
-                let ex = Number(b.querySelector(".exam").value || 0);
+                let c1 = Number(b.querySelector(".ca1").value || 0), 
+                    c2 = Number(b.querySelector(".ca2").value || 0), 
+                    c3 = Number(b.querySelector(".ca3").value || 0), 
+                    ex = Number(b.querySelector(".exam").value || 0);
                 let tot = c1 + c2 + c3 + ex;
                 
                 let calculatedGrade = (function(t){
@@ -535,14 +510,14 @@
             }
 
             if(payloadsToSave.length === 0) {
-                stat.innerText = "❌ Please include at least one subject score.";
+                stat.innerText = "❌ Please enter at least one valid subject.";
                 return;
             }
 
-            stat.innerText = "Uploading records to database...";
+            stat.innerText = "Uploading data directly to Supabase...";
 
             try {
-                // Insert directly into the Supabase analysis table
+                // Upload records to the Supabase analysis table
                 const { error } = await supabaseClient
                     .from('analysis')
                     .insert(payloadsToSave);
@@ -550,11 +525,11 @@
                 if (error) throw error;
 
                 stat.innerText = "Upload Completed!";
-                alert("Success: The student records have been saved to Supabase.");
+                alert("Success: The student records have been saved to your Supabase Database.");
                 location.reload();
             } catch (err) {
                 console.error(err);
-                stat.innerText = "❌ Error uploading data to Supabase.";
+                stat.innerText = "❌ Upload Error: Check your console log.";
             }
         }
     </script>
