@@ -49,21 +49,28 @@
         .hidden { display: none; }
         .admin-link { text-align: center; margin-top: 40px; font-size: 13px; color: #888; cursor: pointer; text-decoration: underline; }
 
+        /* PRINT CONFIGURATION: Auto-adjusts fonts and spacing for single-page printing */
         @media print {
             .container, .admin-link, .print-btn { display: none !important; }
             #result-slip { border: none !important; padding: 0 !important; margin: 0 !important; display: block !important; width: 100% !important; }
             body { background: white; margin: 0; padding: 0; }
+
             .header-section { margin-bottom: 8px; padding-bottom: 5px; }
             .header-text h1 { font-size: 18px !important; }
+            
             .student-info { grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; padding: 8px; font-size: 11px !important; }
             .info-item { padding: 2px 0; }
+
             table { margin-top: 10px; }
             th { padding: 4px; font-size: 10px !important; }
             td { padding: 3px; font-size: 10px !important; }
+            
             .traits-display { gap: 10px; margin-top: 10px; font-size: 10px !important; }
             .traits-table { padding: 6px; }
+
             .summary-box { margin-top: 10px; padding: 8px; font-size: 11px !important; }
             .pos-badge { padding: 6px 12px; font-size: 12px !important; }
+
             .signature-section { margin-top: 12px; padding-top: 6px; font-size: 11px !important; }
         }
     </style>
@@ -286,24 +293,23 @@
             const status = document.getElementById('status');
             if (!nameInput || !idInput) return alert("Please enter Name and Admission Number");
 
-            status.innerText = "Querying Terminal Database...";
+            status.innerText = "Querying Database...";
             status.style.color = "blue";
 
             try {
-                // Retrieve all existing records directly from Supabase
                 const { data: rawData, error } = await supabaseClient
                     .from('analysis')
                     .select('*');
 
                 if (error) throw error;
-
+                
                 if (!rawData || rawData.length === 0) {
                     status.innerText = "Error: Student database is empty.";
                     status.style.color = "red";
                     return;
                 }
 
-                // Standardizing response properties to map to previous processing format
+                // Map Supabase specific underscore keys to student object properties correctly
                 const rows = rawData.map(r => ({
                     Name: r.student_name, ID: r.student_id, Gender: r.gender, Age: r.age,
                     SchoolName: r.school_name, Class: r.class, Term: r.term, Session: r.session,
@@ -372,7 +378,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                status.innerText = "Error accessing Supabase Database.";
+                status.innerText = "Error querying records from database.";
             }
         }
 
@@ -434,7 +440,7 @@
 
         async function saveData(){
             const stat = document.getElementById("upload-status");
-            stat.innerText = "Saving student profile and performance...";
+            stat.innerText = "Processing performance data...";
             let boxes = document.querySelectorAll("#subjects .subject-box");
 
             let payloadsToSave = [];
@@ -517,7 +523,6 @@
             stat.innerText = "Uploading data directly to Supabase...";
 
             try {
-                // Upload records to the Supabase analysis table
                 const { error } = await supabaseClient
                     .from('analysis')
                     .insert(payloadsToSave);
@@ -529,7 +534,7 @@
                 location.reload();
             } catch (err) {
                 console.error(err);
-                stat.innerText = "❌ Upload Error: Check your console log.";
+                stat.innerText = "❌ Upload Error. Check your browser console.";
             }
         }
     </script>
