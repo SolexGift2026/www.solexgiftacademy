@@ -1,570 +1,562 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Portal & Result Checker</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolexGift Tech Academy Portal</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    :root {
-      --primary-color: #007bff;
-      --secondary-color: #28a745;
-      --accent-color: #17a2b8;
-      --background-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-color: #333333;
-      --border-color: #cccccc;
-    }
+    <style>
+        :root { --primary: #1b4332; --gold: #d4af37; --bg: #eef2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); padding: 20px; color: #111; }
+        
+        .container { max-width: 850px; margin: auto; background: #fff; padding: 25px; border-radius: 12px; border-top: 6px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        h3 { color: var(--primary); border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px; }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        label { font-size: 13px; font-weight: bold; color: #444; margin-top: 5px; display: block; }
+        
+        .view-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .view-btn:hover { background: #2d6a4f; }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--background-color);
-      margin: 0;
-      padding: 20px;
-      color: var(--text-color);
-    }
+        .bio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .traits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .subject-box { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd; }
+        .add-btn { background: var(--gold); color: white; margin-bottom: 10px; }
 
-    .container {
-      max-width: 800px;
-      background: var(--card-bg);
-      margin: 20px auto;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
+        #result-slip { display: none; max-width: 850px; margin: auto; background: white; padding: 35px; border: 1px solid #aaa; position: relative; }
+        .header-section { text-align: center; border-bottom: 3px double var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
+        .header-text h1 { margin: 0; font-size: 22px; color: var(--primary); text-transform: uppercase; }
+        
+        .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; font-size: 13px; }
+        .info-item { border-bottom: 1px dashed #bbb; padding: 4px 0; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: var(--primary); color: white; padding: 10px; text-align: center; font-size: 11px; }
+        td { padding: 8px; border: 1px solid #000; text-align: center; font-size: 11.5px; }
+        .subject-name { text-align: left; font-weight: bold; }
+        
+        .traits-display { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 20px; font-size: 12px; }
+        .traits-table { border: 1px solid #000; padding: 12px; }
+        
+        .summary-box { margin-top: 20px; padding: 15px; border: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .pos-badge { background: var(--gold); color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 15px; text-align: center; }
 
-    /* Navigation Tabs */
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 25px;
-      border-bottom: 2px solid var(--border-color);
-    }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 10px; border-top: 1px solid #ddd; }
 
-    .tab-btn {
-      padding: 12px 24px;
-      font-size: 16px;
-      font-weight: bold;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #666;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s ease;
-      flex: 1;
-      text-align: center;
-    }
+        .hidden { display: none; }
+        .admin-link { text-align: center; margin-top: 40px; font-size: 13px; color: #888; cursor: pointer; text-decoration: underline; }
 
-    .tab-btn.active {
-      color: var(--primary-color);
-      border-bottom-color: var(--primary-color);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: var(--text-color);
-    }
-
-    .section-title {
-      font-size: 1.1em;
-      color: var(--primary-color);
-      margin-top: 20px;
-      margin-bottom: 15px;
-      font-weight: bold;
-      border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 5px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 15px;
-    }
-
-    .form-row .form-group {
-      flex: 1;
-    }
-
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #555555;
-      font-size: 14px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 15px;
-      background-color: #fafafa;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary-color);
-      background-color: #ffffff;
-      outline: none;
-    }
-
-    input[readonly] {
-      background-color: #e9ecef;
-      cursor: not-allowed;
-    }
-
-    .subject-row {
-      background-color: #f8f9fa;
-      padding: 15px;
-      border: 1px solid #e2e2e2;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      position: relative;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--secondary-color);
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-      margin-top: 10px;
-    }
-
-    .btn:hover {
-      background-color: #218838;
-    }
-
-    .btn-add {
-      background-color: var(--accent-color);
-      margin-bottom: 15px;
-    }
-
-    .btn-add:hover {
-      background-color: #138496;
-    }
-
-    /* Results Table Styling */
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    .results-table th, .results-table td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-
-    .results-table th {
-      background-color: #f2f2f2;
-      color: #333;
-    }
-
-    #statusMessage, #checkStatus {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 15px;
-      font-size: 15px;
-    }
-
-    @media print {
-      body { background: white; }
-      .container { box-shadow: none; padding: 0; }
-      .tabs, .btn, #studentForm, .search-box { display: none; }
-      #resultDisplay { display: block; }
-    }
-  </style>
+        @media print {
+            .container, .admin-link, .print-btn { display: none !important; }
+            #result-slip { border: none !important; padding: 0 !important; margin: 0 !important; display: block !important; width: 100% !important; }
+            body { background: white; margin: 0; padding: 0; }
+            .header-section { margin-bottom: 8px; padding-bottom: 5px; }
+            .header-text h1 { font-size: 18px !important; }
+            .student-info { grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; padding: 8px; font-size: 11px !important; }
+            .info-item { padding: 2px 0; }
+            table { margin-top: 10px; }
+            th { padding: 4px; font-size: 10px !important; }
+            td { padding: 3px; font-size: 10px !important; }
+            .traits-display { gap: 10px; margin-top: 10px; font-size: 10px !important; }
+            .traits-table { padding: 6px; }
+            .summary-box { margin-top: 10px; padding: 8px; font-size: 11px !important; }
+            .pos-badge { padding: 6px 12px; font-size: 12px !important; }
+            .signature-section { margin-top: 12px; padding-top: 6px; font-size: 11px !important; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="tabs">
-    <button id="checkingBtn" class="tab-btn active" onclick="switchTab('checking')">Student Result Checker</button>
-    <button id="entryBtn" class="tab-btn" onclick="switchTab('entry')">Teacher Entry Portal</button>
-  </div>
-
-  <div id="checkingTab" class="tab-content active">
-    <h2>Check Your Result</h2>
-    <div class="search-box" style="background: #e9ecef; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
-      <div class="form-group">
-        <label for="searchStudentId">Enter Your Student ID</label>
-        <input type="text" id="searchStudentId" placeholder="e.g. STU-101">
-      </div>
-      <button type="button" class="btn" onclick="checkStudentResult()" style="background-color: var(--primary-color);">View Result</button>
+    <div class="container" id="search-area">
+        <h2>Check Your Result</h2>
+        <input type="text" id="studentName" placeholder="Full Name (AS RECORDED)">
+        <input type="text" id="studentID" placeholder="Student ID (Admission No)">
+        <button class="view-btn" onclick="fetchResult()">View Result Slip</button>
+        <p id="status" style="text-align: center; margin-top: 10px; font-weight: bold;"></p>
+        <p class="admin-link" onclick="showAdminLogin()">Teacher Portal Access</p>
     </div>
 
-    <p id="checkStatus"></p>
-
-    <div id="resultDisplay" style="display: none;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h3 id="resStudentName" style="margin: 0; color: #333;"></h3>
-        <p id="resStudentInfo" style="margin: 5px 0; font-size: 16px; color: #666;"></p>
-      </div>
-
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>CA</th>
-            <th>Exam</th>
-            <th>Total</th>
-            <th>Grade</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTableBody">
-          </tbody>
-      </table>
-
-      <div style="margin-top: 20px;">
-        <p><strong>Teacher's Remark:</strong> <span id="resRemark"></span></p>
-      </div>
-
-      <button type="button" class="btn" onclick="window.print()" style="background-color: #6c757d; margin-top: 20px;">🖨️ Print Result Slip</button>
+    <div id="admin-login" class="container hidden" style="max-width: 400px;">
+        <h2>Teacher Access</h2>
+        <input type="password" id="accessID" placeholder="Enter Access ID">
+        <button class="view-btn" onclick="verifyAdmin()">Unlock Upload Portal</button>
+        <p style="text-align:center; color:red; cursor:pointer; margin-top:10px;" onclick="location.reload()">Cancel</p>
     </div>
-  </div>
 
+    <div id="teacher-section" class="container hidden">
+        <h2>Result Upload Portal</h2>
+        
+        <h3>Bio Data & Demographics</h3>
+        <div class="bio-grid">
+            <input id="name" placeholder="Student Full Name">
+            <input id="id" placeholder="Student ID/Admission No">
+            <input id="gender" placeholder="Gender">
+            <input id="age" type="number" placeholder="Age">
+            <input id="schoolName" placeholder="School Name" value="SOLEXGIFT TECH ACADEMY">
+            <input id="className" placeholder="Class">
+            <input id="term" placeholder="Term">
+            <input id="session" placeholder="Session">
+            <input id="email" placeholder="Parent/Student Email">
+            <input id="phone" placeholder="Parent/Student Phone">
+        </div>
 
-  <div id="entryTab" class="tab-content">
-    <h2>Enter Student Records</h2>
-    <form id="studentForm">
-      <div class="section-title">Student Details</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="studentId">Student ID *</label>
-          <input type="text" id="studentId" placeholder="e.g. STU-101" required>
-        </div>
-        <div class="form-group">
-          <label for="studentName">Student Name *</label>
-          <input type="text" id="studentName" placeholder="Full Name" required>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="studentClass">Class *</label>
-          <input type="text" id="studentClass" placeholder="e.g. JSS1" required>
-        </div>
-        <div class="form-group">
-          <label for="term">Term *</label>
-          <select id="term">
-            <option value="First Term">First Term</option>
-            <option value="Second Term">Second Term</option>
-            <option value="Third Term">Third Term</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="section-title">Academic Scores</div>
-      <div id="subjectsContainer">
-        <div class="subject-row">
-          <div class="form-group">
-            <label>Subject *</label>
-            <input type="text" class="subject-input" placeholder="e.g. Mathematics" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>CA Score</label>
-              <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+        <h3>Psychomotor & Behavioural Traits</h3>
+        <div class="traits-grid">
+            <div>
+                <label>Neatness</label>
+                <select id="neatness"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
+                <label>Obedience</label>
+                <select id="obedience"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
+                <label>Punctuality</label>
+                <select id="punctuality"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
             </div>
-            <div class="form-group">
-              <label>Exam Score</label>
-              <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+            <div>
+                <label>Attentiveness</label>
+                <select id="attentiveness"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
+                <label>Initiative</label>
+                <select id="initiative"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
+                <label>Self Control</label>
+                <select id="selfControl"><option value="5">A - Excellent</option><option value="4">B - Good</option><option value="3">C - Fair</option><option value="2">D - Weak</option><option value="1">E - Poor</option></select>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Total Score</label>
-              <input type="number" class="total-input" readonly placeholder="Auto">
-            </div>
-            <div class="form-group">
-              <label>Grade</label>
-              <input type="text" class="grade-input" readonly placeholder="Auto">
-            </div>
-          </div>
         </div>
-      </div>
 
-      <button type="button" class="btn btn-add" onclick="addNewSubjectRow()">➕ Add Another Subject</button>
-
-      <div class="form-group">
-        <label for="remark">Teacher Remark</label>
-        <textarea id="remark" rows="3" placeholder="Add comment..."></textarea>
-      </div>
-
-      <button type="button" class="btn" onclick="saveRecord()">Save Records to Database</button>
-    </form>
-    <p id="statusMessage"></p>
-  </div>
-</div>
-
-<script>
-  // Supabase connection keys
-  const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobWRmY2JubnNnaHZ5cmtjeGkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcxMzYwMTE0MSwiZXhwIjoyMDI5MTc3MTQxfQ.mI5lnC5mUqS4tR9wcZM3E9co59Xbg4nvQ_mI5ln";
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // Set the password for the Teacher Portal here
-  const TEACHER_PASSWORD = "admin"; 
-
-  // Tab switching function with security
-  function switchTab(tabName) {
-    if (tabName === 'entry') {
-      // Prompt for password when trying to access Teacher Portal
-      const accessPassword = prompt("Please enter the teacher access password:");
-      
-      if (accessPassword !== TEACHER_PASSWORD) {
-        alert("❌ Access Denied: Incorrect Password");
-        return;
-      }
-    }
-
-    // If correct or switching to results tab, proceed
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    
-    if (tabName === 'entry') {
-      document.getElementById('entryTab').classList.add('active');
-      document.getElementById('entryBtn').classList.add('active');
-    } else {
-      document.getElementById('checkingTab').classList.add('active');
-      document.getElementById('checkingBtn').classList.add('active');
-    }
-  }
-
-  // Auto calculate scores for subjects dynamically
-  function calculateSubjectTotal(inputElem) {
-    const parentRow = inputElem.closest('.subject-row');
-    const ca = parseFloat(parentRow.querySelector('.ca-input').value) || 0;
-    const exam = parseFloat(parentRow.querySelector('.exam-input').value) || 0;
-    const total = ca + exam;
-
-    parentRow.querySelector('.total-input').value = total;
-
-    let grade = "";
-    if (total >= 70) grade = "A";
-    else if (total >= 60) grade = "B";
-    else if (total >= 50) grade = "C";
-    else if (total >= 45) grade = "D";
-    else if (total >= 40) grade = "E";
-    else grade = "F";
-
-    parentRow.querySelector('.grade-input').value = grade;
-  }
-
-  // Create a new subject line
-  function addNewSubjectRow() {
-    const subjectsContainer = document.getElementById('subjectsContainer');
-    const newRow = document.createElement('div');
-    newRow.className = 'subject-row';
-    newRow.innerHTML = `
-      <div class="form-group">
-        <label>Subject *</label>
-        <input type="text" class="subject-input" placeholder="e.g. English" required>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>CA Score</label>
-          <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
-        </div>
-        <div class="form-group">
-          <label>Exam Score</label>
-          <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Total Score</label>
-          <input type="number" class="total-input" readonly placeholder="Auto">
-        </div>
-        <div class="form-group">
-          <label>Grade</label>
-          <input type="text" class="grade-input" readonly placeholder="Auto">
-        </div>
-      </div>
-      <button type="button" onclick="this.closest('.subject-row').remove()" style="color: red; border: none; background: none; font-size: 13px; cursor: pointer; float: right; margin-top: -10px;">❌ Remove Subject</button>
-    `;
-    subjectsContainer.appendChild(newRow);
-  }
-
-  // Insert Records into Supabase
-  async function saveRecord() {
-    const statusMsg = document.getElementById('statusMessage');
-    const student_id = document.getElementById('studentId').value.trim();
-    const student_name = document.getElementById('studentName').value.trim();
-    const classVal = document.getElementById('studentClass').value.trim();
-    const term = document.getElementById('term').value;
-    const remark = document.getElementById('remark').value.trim();
-
-    if (!student_id || !student_name || !classVal) {
-      statusMsg.innerText = "❌ Please fill out all required basic student fields!";
-      statusMsg.style.color = "red";
-      return;
-    }
-
-    const rows = document.querySelectorAll('.subject-row');
-    const insertPayload = [];
-
-    for (let row of rows) {
-      const subject = row.querySelector('.subject-input').value.trim();
-      const ca_score = parseFloat(row.querySelector('.ca-input').value) || 0;
-      const exam_score = parseFloat(row.querySelector('.exam-input').value) || 0;
-      const total_score = parseFloat(row.querySelector('.total-input').value) || 0;
-      const grade = row.querySelector('.grade-input').value;
-
-      if (!subject) {
-        statusMsg.innerText = "❌ Please enter a name for all added subjects.";
-        statusMsg.style.color = "red";
-        return;
-      }
-
-      insertPayload.push({
-        student_id,
-        student_name,
-        class: classVal,
-        term,
-        subject,
-        ca_score,
-        exam_score,
-        total_score,
-        grade,
-        remark
-      });
-    }
-
-    statusMsg.innerText = "Saving records to database...";
-    statusMsg.style.color = "#007bff";
-
-    try {
-      const { error } = await supabaseClient
-        .from('analysis')
-        .insert(insertPayload);
-
-      if (error) throw error;
-
-      statusMsg.innerText = "✅ Student records successfully saved to the database!";
-      statusMsg.style.color = "green";
-
-      // Reset form
-      document.getElementById('studentForm').reset();
-      document.getElementById('subjectsContainer').innerHTML = `
-        <div class="subject-row">
-          <div class="form-group">
-            <label>Subject *</label>
-            <input type="text" class="subject-input" placeholder="e.g. Mathematics" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>CA Score</label>
-              <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+        <h3>Subject Scores & Continuous Assessments</h3>
+        <div id="subjects">
+            <div class="subject-box">
+                <input class="subject" placeholder="Subject">
+                <input class="ca1" type="number" max="10" placeholder="CA1">
+                <input class="ca2" type="number" max="10" placeholder="CA2">
+                <input class="ca3" type="number" max="10" placeholder="CA3">
+                <input class="exam" type="number" max="70" placeholder="Exam">
             </div>
-            <div class="form-group">
-              <label>Exam Score</label>
-              <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Total Score</label>
-              <input type="number" class="total-input" readonly placeholder="Auto">
-            </div>
-            <div class="form-group">
-              <label>Grade</label>
-              <input type="text" class="grade-input" readonly placeholder="Auto">
-            </div>
-          </div>
         </div>
-      `;
-    } catch (err) {
-      console.error(err);
-      statusMsg.innerText = "❌ Error: " + err.message;
-      statusMsg.style.color = "red";
-    }
-  }
+        <button class="view-btn add-btn" onclick="addSubject()">+ Add Subject</button>
 
-  // Fetch Results from database for a student ID
-  async function checkStudentResult() {
-    const studentIdInput = document.getElementById('searchStudentId').value.trim();
-    const checkStatus = document.getElementById('checkStatus');
-    const resultDisplay = document.getElementById('resultDisplay');
-    const tbody = document.getElementById('resultsTableBody');
+        <h3>Teacher Remarks</h3>
+        <textarea id="teacherRemark" placeholder="Class Teacher Remarks"></textarea>
+        <input id="principalName" placeholder="Principal's Name" value="Principal Name">
 
-    if (!studentIdInput) {
-      checkStatus.innerText = "❌ Please enter a valid Student ID.";
-      checkStatus.style.color = "red";
-      return;
-    }
+        <button class="view-btn" style="background:#1b4332; margin-top:15px;" onclick="saveData()">SAVE TO SUPABASE</button>
+        <div id="upload-status" style="text-align:center; margin-top:10px; font-weight:bold;"></div>
+        <button style="background:#888; color:white; margin-top: 10px;" class="view-btn" onclick="location.reload()">Logout</button>
+    </div>
 
-    checkStatus.innerText = "Searching database...";
-    checkStatus.style.color = "#007bff";
-    resultDisplay.style.display = "none";
-    tbody.innerHTML = "";
+    <div id="result-slip">
+        <div class="header-section">
+            <h1 id="res-school">SOLEXGIFT TECH ACADEMY</h1>
+            <p>Official Academic Performance Report</p>
+        </div>
 
-    try {
-      const { data, error } = await supabaseClient
-        .from('analysis')
-        .select('*')
-        .eq('student_id', studentIdInput);
+        <div class="student-info">
+            <div class="info-item"><b>NAME:</b> <span id="res-name"></span></div>
+            <div class="info-item"><b>STUDENT ID:</b> <span id="res-id"></span></div>
+            <div class="info-item"><b>GENDER:</b> <span id="res-gender"></span></div>
+            <div class="info-item"><b>PARENT EMAIL:</b> <span id="res-email"></span></div>
+            <div class="info-item"><b>PARENT PHONE:</b> <span id="res-phone"></span></div>
+            <div class="info-item"><b>CLASS:</b> <span id="res-class"></span></div>
+            <div class="info-item"><b>NO. IN CLASS:</b> <span id="res-class-size"></span></div>
+        </div>
 
-      if (error) throw error;
+        <table>
+            <thead>
+                <tr>
+                    <th class="subject-name">Subject</th>
+                    <th>CA1</th><th>CA2</th><th>CA3</th><th>Exam</th><th>Total</th><th>Grade</th><th>Subject Pos.</th>
+                </tr>
+            </thead>
+            <tbody id="subject-rows"></tbody>
+        </table>
 
-      if (!data || data.length === 0) {
-        checkStatus.innerText = "❌ No results found for this ID.";
-        checkStatus.style.color = "red";
-        return;
-      }
+        <div class="traits-display">
+            <div class="traits-table">
+                <h4 style="margin:0 0 8px 0; border-bottom:1px solid #000; text-align:center;">BEHAVIOURAL ASSESSMENT</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Neatness:</span><strong id="res-neatness">-</strong></div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Obedience:</span><strong id="res-obedience">-</strong></div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Punctuality:</span><strong id="res-punctuality">-</strong></div>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Attentiveness:</span><strong id="res-attentiveness">-</strong></div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Initiative:</span><strong id="res-initiative">-</strong></div>
+                        <div style="display:flex; justify-content:space-between; padding:2px 0;"><span>Self Control:</span><strong id="res-selfcontrol">-</strong></div>
+                    </div>
+                </div>
+            </div>
+            <div class="traits-table" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+                <strong>GRADING SCALE:</strong>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px; margin-top:4px;">
+                    <div>A1: (75+)<br>B2: (70-74)<br>B3: (65-69)</div>
+                    <div>C4-C6: (50-64)<br>D7-E8: (40-49)<br>F9: (0-39)</div>
+                </div>
+            </div>
+        </div>
 
-      // Populate result details
-      const firstRecord = data[0];
-      document.getElementById('resStudentName').innerText = firstRecord.student_name;
-      document.getElementById('resStudentInfo').innerText = `Class: ${firstRecord.class} | Term: ${firstRecord.term}`;
-      document.getElementById('resRemark').innerText = firstRecord.remark || "N/A";
+        <div class="summary-box">
+            <div>
+                <b>GRAND TOTAL:</b> <span id="res-grand-total">0</span><br>
+                <b>AVERAGE:</b> <span id="res-avg">0.00</span>%<br>
+                <b>CLASS TEACHER REMARKS:</b> <span id="res-teacher-remark">-</span>
+            </div>
+            <div class="pos-badge">
+                OVERALL POS:<br><span id="res-overall-pos"></span>
+            </div>
+        </div>
 
-      // Populate results table
-      data.forEach(item => {
-        const row = `
-          <tr>
-            <td>${item.subject}</td>
-            <td>${item.ca_score || 0}</td>
-            <td>${item.exam_score || 0}</td>
-            <td>${item.total_score || 0}</td>
-            <td>${item.grade || 'N/A'}</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
+        <div class="signature-section">
+            <div>
+                <b>PRINCIPAL:</b> <span id="res-principal">DAVID DAVID YAKUBU</span><br>
+                <small style="color:#666;">Official Signature & Date</small>
+            </div>
+            <div style="text-align:right;">
+                <i>Powered by <b>SolexGift Tech Academy</b></i>
+            </div>
+        </div>
 
-      checkStatus.innerText = "";
-      resultDisplay.style.display = "block";
+        <button class="view-btn print-btn" style="background:#444; margin-top:20px;" onclick="window.print()">Print Result</button>
+        <button class="view-btn print-btn" style="margin-top:10px;" onclick="location.reload()">New Search</button>
+    </div>
 
-    } catch (err) {
-      console.error(err);
-      checkStatus.innerText = "❌ Error fetching results: " + err.message;
-      checkStatus.style.color = "red";
-    }
-  }
-</script>
+    <script>
+        // Disable Right-Click view options
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
 
+        // Supabase Database Connection Details
+        const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_4tR9wcZM3E9co59Xbg4nvQ_mI5lnmE3";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const SECRET_KEY = "CKA001";
+
+        function showAdminLogin() {
+            document.getElementById('search-area').classList.add('hidden');
+            document.getElementById('admin-login').classList.remove('hidden');
+        }
+
+        function verifyAdmin() {
+            if (document.getElementById('accessID').value === SECRET_KEY) {
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('teacher-section').classList.remove('hidden');
+            } else { alert("Invalid Teacher Access ID!"); }
+        }
+
+        function addSubject(){
+            let div = document.createElement("div");
+            div.className = "subject-box";
+            div.innerHTML = `
+                <input class="subject" placeholder="Subject">
+                <input class="ca1" type="number" max="10" placeholder="CA1">
+                <input class="ca2" type="number" max="10" placeholder="CA2">
+                <input class="ca3" type="number" max="10" placeholder="CA3">
+                <input class="exam" type="number" max="70" placeholder="Exam">
+            `;
+            document.getElementById("subjects").appendChild(div);
+        }
+
+        function getOrdinal(n) {
+            if (!n) return "-";
+            let s = ["th", "st", "nd", "rd"], v = n % 100;
+            return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        }
+
+        function mapTraitGrade(val) {
+            const n = Number(val);
+            if (n === 5) return "A";
+            if (n === 4) return "B";
+            if (n === 3) return "C";
+            if (n === 2) return "D";
+            if (n === 1) return "E";
+            return "-";
+        }
+
+        function clean(str) {
+            return str ? str.toString().toLowerCase().trim().replace(/\s+/g, " ") : "";
+        }
+
+        async function fetchResult() {
+            const nameInput = clean(document.getElementById('studentName').value);
+            const idInput = clean(document.getElementById('studentID').value);
+            const status = document.getElementById('status');
+            
+            if (!nameInput || !idInput) return alert("Please enter Name and Admission Number");
+
+            status.innerText = "Querying Database...";
+            status.style.color = "blue";
+
+            try {
+                // Fetch student performance data straight from Supabase instead of Apps Script
+                const { data: rawData, error } = await supabaseClient
+                    .from('analysis')
+                    .select('*');
+
+                if (error) throw error;
+
+                if (!rawData || rawData.length === 0) {
+                    status.innerText = "Error: Student database is empty.";
+                    status.style.color = "red";
+                    return;
+                }
+
+                // Normalizing field names
+                const rows = rawData.map(r => ({
+                    Name: r.student_name || r.Name,
+                    ID: r.student_id || r.ID,
+                    Gender: r.gender || r.Gender,
+                    Age: r.age || r.Age,
+                    SchoolName: r.school_name || r.SchoolName,
+                    Class: r.class || r.Class,
+                    Term: r.term || r.Term,
+                    Session: r.session || r.Session,
+                    Subject: r.subject || r.Subject,
+                    CA1: r.ca_score1 || r.ca1 || r.CA1,
+                    CA2: r.ca_score2 || r.ca2 || r.CA2,
+                    CA3: r.ca_score3 || r.ca3 || r.CA3,
+                    Exam: r.exam_score || r.exam || r.Exam,
+                    Total: r.total_score || r.total || r.Total,
+                    Grade: r.grade || r.Grade,
+                    Email: r.email || r.Email,
+                    Phone: r.phone || r.Phone,
+                    Neatness: r.neatness || r.Neatness,
+                    Obedience: r.obedience || r.Obedience,
+                    Punctuality: r.punctuality || r.Punctuality,
+                    Attentiveness: r.attentiveness || r.Attentiveness,
+                    Initiative: r.initiative || r.Initiative,
+                    SelfControl: r.self_control || r.selfControl || r.SelfControl,
+                    TeacherRemark: r.remark || r.teacher_remark || r.TeacherRemark,
+                    PrincipalName: r.principal_name || r.PrincipalName
+                }));
+
+                let studentsMap = {};
+                rows.forEach(r => {
+                    if (!r.ID) return;
+                    const sid = clean(r.ID);
+                    const sClass = clean(r.Class);
+                    const sTerm = clean(r.Term);
+                    const sSession = clean(r.Session);
+                    const sSchool = clean(r.SchoolName);
+                    
+                    const key = `${sSchool}_${sSession}_${sTerm}_${sClass}_${sid}`;
+                    
+                    if (!studentsMap[key]) {
+                        studentsMap[key] = { 
+                            name: r.Name, id: r.ID, gender: r.Gender, age: r.Age,
+                            schoolName: r.SchoolName, className: r.Class, term: r.Term, 
+                            session: r.Session, email: r.Email, phone: r.Phone, 
+                            neatness: r.Neatness, obedience: r.Obedience, 
+                            punctuality: r.Punctuality, attentiveness: r.Attentiveness,
+                            initiative: r.Initiative, selfControl: r.SelfControl,
+                            teacherRemark: r.TeacherRemark, principal: r.PrincipalName, 
+                            subjects: [], grandTotal: 0 
+                        };
+                    }
+                    
+                    const subClean = clean(r.Subject);
+                    if (!studentsMap[key].subjects.some(s => clean(s.Subject) === subClean)) {
+                        studentsMap[key].subjects.push(r);
+                        studentsMap[key].grandTotal += Number(r.Total || 0);
+                    }
+                });
+
+                let processedStudents = Object.values(studentsMap);
+                const student = processedStudents.find(s => clean(s.name) === nameInput && clean(s.id) === idInput);
+
+                if (student) {
+                    const classPeers = processedStudents.filter(s => 
+                        clean(s.schoolName) === clean(student.schoolName) &&
+                        clean(s.session) === clean(student.session) &&
+                        clean(s.term) === clean(student.term) &&
+                        clean(s.className) === clean(student.className)
+                    );
+
+                    classPeers.forEach(peer => {
+                        peer.average = peer.subjects.length > 0 ? (peer.grandTotal / peer.subjects.length) : 0;
+                    });
+
+                    classPeers.sort((a, b) => b.average - a.average);
+                    
+                    const overallPos = classPeers.findIndex(s => clean(s.id) === idInput) + 1;
+                    const classTotal = classPeers.length;
+
+                    displayResult(student, classTotal, overallPos, rows);
+                    status.innerText = "";
+                } else {
+                    status.innerText = "Error: Student not found. Check details again.";
+                    status.style.color = "red";
+                }
+            } catch (e) {
+                console.error(e);
+                status.innerText = "Error accessing Supabase.";
+            }
+        }
+
+        function displayResult(student, classTotal, overallPos, rawRows) {
+            document.getElementById('search-area').style.display = 'none';
+            document.getElementById('result-slip').style.display = 'block';
+
+            document.getElementById('res-school').innerText = (student.schoolName || "SOLEXGIFT TECH ACADEMY").toUpperCase();
+            document.getElementById('res-name').innerText = student.name.toUpperCase();
+            document.getElementById('res-id').innerText = student.id;
+            document.getElementById('res-gender').innerText = (student.gender || "MALE").toUpperCase();
+            document.getElementById('res-email').innerText = student.email || "N/A";
+            document.getElementById('res-phone').innerText = student.phone || "N/A";
+            document.getElementById('res-class').innerText = student.className;
+            
+            document.getElementById('res-overall-pos').innerText = getOrdinal(overallPos) + " out of " + classTotal;
+            document.getElementById('res-class-size').innerText = classTotal + " Students";
+
+            document.getElementById('res-neatness').innerText = mapTraitGrade(student.neatness);
+            document.getElementById('res-obedience').innerText = mapTraitGrade(student.obedience);
+            document.getElementById('res-punctuality').innerText = mapTraitGrade(student.punctuality);
+            document.getElementById('res-attentiveness').innerText = mapTraitGrade(student.attentiveness);
+            document.getElementById('res-initiative').innerText = mapTraitGrade(student.initiative);
+            document.getElementById('res-selfcontrol').innerText = mapTraitGrade(student.selfControl);
+
+            let html = '';
+            student.subjects.forEach(s => {
+                const subjectRows = rawRows.filter(r => 
+                    clean(r.SchoolName) === clean(student.schoolName) &&
+                    clean(r.Session) === clean(student.session) &&
+                    clean(r.Term) === clean(student.term) &&
+                    clean(r.Class) === clean(student.className) &&
+                    clean(r.Subject) === clean(s.Subject)
+                );
+
+                subjectRows.sort((a, b) => Number(b.Total || 0) - Number(a.Total || 0));
+                const subjectPosition = subjectRows.findIndex(r => clean(r.ID) === clean(student.id)) + 1;
+
+                html += `<tr>
+                    <td class="subject-name">${s.Subject}</td>
+                    <td>${s.CA1 || "0"}</td>
+                    <td>${s.CA2 || "0"}</td>
+                    <td>${s.CA3 || "0"}</td>
+                    <td>${s.Exam || "0"}</td>
+                    <td style="font-weight:bold;">${s.Total || "0"}</td>
+                    <td style="font-weight:bold;">${s.Grade || "-"}</td>
+                    <td style="font-weight:bold;">${getOrdinal(subjectPosition)}</td>
+                </tr>`;
+            });
+
+            document.getElementById('subject-rows').innerHTML = html;
+            document.getElementById('res-grand-total').innerText = student.grandTotal;
+            
+            const avg = (student.grandTotal / student.subjects.length).toFixed(2);
+            document.getElementById('res-avg').innerText = avg;
+            document.getElementById('res-teacher-remark').innerText = student.teacherRemark || "Good effort.";
+            document.getElementById('res-principal').innerText = student.principal || "DAVID DAVID YAKUBU";
+        }
+
+        async function saveData(){
+            const stat = document.getElementById("upload-status");
+            stat.innerText = "Processing records and computing grades...";
+            
+            let boxes = document.querySelectorAll("#subjects .subject-box");
+
+            let payloadsToSave = [];
+            
+            // Extract common bio information
+            const name = document.getElementById("name").value.trim();
+            const id = document.getElementById("id").value.trim();
+            const gender = document.getElementById("gender").value.trim();
+            const age = parseInt(document.getElementById("age").value) || null;
+            const schoolName = document.getElementById("schoolName").value.trim();
+            const className = document.getElementById("className").value.trim();
+            const term = document.getElementById("term").value.trim();
+            const session = document.getElementById("session").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            
+            // Extract core traits
+            const neatness = document.getElementById("neatness").value;
+            const obedience = document.getElementById("obedience").value;
+            const punctuality = document.getElementById("punctuality").value;
+            const attentiveness = document.getElementById("attentiveness").value;
+            const initiative = document.getElementById("initiative").value;
+            const selfControl = document.getElementById("selfControl").value;
+            
+            const teacherRemark = document.getElementById("teacherRemark").value.trim();
+            const principalName = document.getElementById("principalName").value.trim();
+
+            if (!name || !id || !className || !term) {
+                stat.innerText = "❌ Name, ID, Class, and Term are required.";
+                return;
+            }
+
+            for (let b of boxes) {
+                let subName = b.querySelector(".subject").value.trim();
+                if(!subName) continue;
+
+                let c1 = Number(b.querySelector(".ca1").value || 0); 
+                let c2 = Number(b.querySelector(".ca2").value || 0); 
+                let c3 = Number(b.querySelector(".ca3").value || 0); 
+                let ex = Number(b.querySelector(".exam").value || 0);
+                let tot = c1 + c2 + c3 + ex;
+                
+                let calculatedGrade = (function(t){
+                    if(t >= 75) return "A1"; if(t >= 70) return "B2"; if(t >= 65) return "B3";
+                    if(t >= 60) return "C4"; if(t >= 55) return "C5"; if(t >= 50) return "C6";
+                    if(t >= 45) return "D7"; if(t >= 40) return "E8"; return "F9";
+                })(tot);
+
+                payloadsToSave.push({
+                    student_name: name,
+                    student_id: id,
+                    gender: gender,
+                    age: age,
+                    school_name: schoolName,
+                    class: className,
+                    term: term,
+                    session: session,
+                    email: email,
+                    phone: phone,
+                    neatness: neatness,
+                    obedience: obedience,
+                    punctuality: punctuality,
+                    attentiveness: attentiveness,
+                    initiative: initiative,
+                    self_control: selfControl,
+                    subject: subName,
+                    ca_score1: c1,
+                    ca_score2: c2,
+                    ca_score3: c3,
+                    exam_score: ex,
+                    total_score: tot,
+                    grade: calculatedGrade,
+                    remark: teacherRemark,
+                    principal_name: principalName
+                });
+            }
+
+            if(payloadsToSave.length === 0) {
+                stat.innerText = "❌ Please include at least one subject score.";
+                return;
+            }
+
+            stat.innerText = "Uploading records to database...";
+
+            try {
+                // Insert directly into the Supabase analysis table
+                const { error } = await supabaseClient
+                    .from('analysis')
+                    .insert(payloadsToSave);
+
+                if (error) throw error;
+
+                stat.innerText = "Upload Completed!";
+                alert("Success: The student records have been saved to Supabase.");
+                location.reload();
+            } catch (err) {
+                console.error(err);
+                stat.innerText = "❌ Error uploading data to Supabase.";
+            }
+        }
+    </script>
 </body>
 </html>
