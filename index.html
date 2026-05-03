@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Portal: Data Entry & Result Checker</title>
+  <title>Student Portal & Result Checker</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -53,6 +53,8 @@
       color: #666;
       border-bottom: 3px solid transparent;
       transition: all 0.3s ease;
+      flex: 1;
+      text-align: center;
     }
 
     .tab-btn.active {
@@ -126,7 +128,6 @@
       cursor: not-allowed;
     }
 
-    /* Subject Section Styling */
     .subject-row {
       background-color: #f8f9fa;
       padding: 15px;
@@ -188,7 +189,6 @@
       font-size: 15px;
     }
 
-    /* Print styling for student results */
     @media print {
       body { background: white; }
       .container { box-shadow: none; padding: 0; }
@@ -201,11 +201,52 @@
 
 <div class="container">
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('entry')">Teacher Entry Portal</button>
-    <button class="tab-btn" onclick="switchTab('checking')">Student Result Checker</button>
+    <button id="checkingBtn" class="tab-btn active" onclick="switchTab('checking')">Student Result Checker</button>
+    <button id="entryBtn" class="tab-btn" onclick="switchTab('entry')">Teacher Entry Portal</button>
   </div>
 
-  <div id="entryTab" class="tab-content active">
+  <div id="checkingTab" class="tab-content active">
+    <h2>Check Your Result</h2>
+    <div class="search-box" style="background: #e9ecef; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
+      <div class="form-group">
+        <label for="searchStudentId">Enter Your Student ID</label>
+        <input type="text" id="searchStudentId" placeholder="e.g. STU-101">
+      </div>
+      <button type="button" class="btn" onclick="checkStudentResult()" style="background-color: var(--primary-color);">View Result</button>
+    </div>
+
+    <p id="checkStatus"></p>
+
+    <div id="resultDisplay" style="display: none;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h3 id="resStudentName" style="margin: 0; color: #333;"></h3>
+        <p id="resStudentInfo" style="margin: 5px 0; font-size: 16px; color: #666;"></p>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>CA</th>
+            <th>Exam</th>
+            <th>Total</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTableBody">
+          </tbody>
+      </table>
+
+      <div style="margin-top: 20px;">
+        <p><strong>Teacher's Remark:</strong> <span id="resRemark"></span></p>
+      </div>
+
+      <button type="button" class="btn" onclick="window.print()" style="background-color: #6c757d; margin-top: 20px;">🖨️ Print Result Slip</button>
+    </div>
+  </div>
+
+
+  <div id="entryTab" class="tab-content">
     <h2>Enter Student Records</h2>
     <form id="studentForm">
       <div class="section-title">Student Details</div>
@@ -276,66 +317,39 @@
     </form>
     <p id="statusMessage"></p>
   </div>
-
-
-  <div id="checkingTab" class="tab-content">
-    <h2>Check Your Result</h2>
-    <div class="search-box" style="background: #e9ecef; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
-      <div class="form-group">
-        <label for="searchStudentId">Enter Your Student ID</label>
-        <input type="text" id="searchStudentId" placeholder="e.g. STU-101">
-      </div>
-      <button type="button" class="btn" onclick="checkStudentResult()" style="background-color: var(--primary-color);">View Result</button>
-    </div>
-
-    <p id="checkStatus"></p>
-
-    <div id="resultDisplay" style="display: none;">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h3 id="resStudentName" style="margin: 0; color: #333;"></h3>
-        <p id="resStudentInfo" style="margin: 5px 0; font-size: 16px; color: #666;"></p>
-      </div>
-
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>CA</th>
-            <th>Exam</th>
-            <th>Total</th>
-            <th>Grade</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTableBody">
-          </tbody>
-      </table>
-
-      <div style="margin-top: 20px;">
-        <p><strong>Teacher's Remark:</strong> <span id="resRemark"></span></p>
-      </div>
-
-      <button type="button" class="btn" onclick="window.print()" style="background-color: #6c757d; margin-top: 20px;">🖨️ Print Result Slip</button>
-    </div>
-  </div>
 </div>
 
 <script>
   // Supabase connection keys
   const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_4tR9wcZM3E9co59Xbg4nvQ_mI5ln";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBobWRmY2JubnNnaHZ5cmtjeGkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcxMzYwMTE0MSwiZXhwIjoyMDI5MTc3MTQxfQ.mI5lnC5mUqS4tR9wcZM3E9co59Xbg4nvQ_mI5ln";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Tab switching function
+  // Set the password for the Teacher Portal here
+  const TEACHER_PASSWORD = "admin"; 
+
+  // Tab switching function with security
   function switchTab(tabName) {
+    if (tabName === 'entry') {
+      // Prompt for password when trying to access Teacher Portal
+      const accessPassword = prompt("Please enter the teacher access password:");
+      
+      if (accessPassword !== TEACHER_PASSWORD) {
+        alert("❌ Access Denied: Incorrect Password");
+        return;
+      }
+    }
+
+    // If correct or switching to results tab, proceed
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     
     if (tabName === 'entry') {
       document.getElementById('entryTab').classList.add('active');
-      event.target.classList.add('active');
+      document.getElementById('entryBtn').classList.add('active');
     } else {
       document.getElementById('checkingTab').classList.add('active');
-      event.target.classList.add('active');
+      document.getElementById('checkingBtn').classList.add('active');
     }
   }
 
@@ -394,7 +408,7 @@
     subjectsContainer.appendChild(newRow);
   }
 
-  // Push Multiple Subjects into Supabase at once
+  // Insert Records into Supabase
   async function saveRecord() {
     const statusMsg = document.getElementById('statusMessage');
     const student_id = document.getElementById('studentId').value.trim();
@@ -409,7 +423,6 @@
       return;
     }
 
-    // Process all subject entries
     const rows = document.querySelectorAll('.subject-row');
     const insertPayload = [];
 
@@ -453,7 +466,7 @@
       statusMsg.innerText = "✅ Student records successfully saved to the database!";
       statusMsg.style.color = "green";
 
-      // Reset Form
+      // Reset form
       document.getElementById('studentForm').reset();
       document.getElementById('subjectsContainer').innerHTML = `
         <div class="subject-row">
@@ -522,13 +535,13 @@
         return;
       }
 
-      // Populate results metadata
+      // Populate result details
       const firstRecord = data[0];
       document.getElementById('resStudentName').innerText = firstRecord.student_name;
       document.getElementById('resStudentInfo').innerText = `Class: ${firstRecord.class} | Term: ${firstRecord.term}`;
       document.getElementById('resRemark').innerText = firstRecord.remark || "N/A";
 
-      // Populate Results Rows
+      // Populate results table
       data.forEach(item => {
         const row = `
           <tr>
