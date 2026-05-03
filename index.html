@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Performance Entry Portal</title>
+  <title>Student Portal: Data Entry & Result Checker</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,8 +11,9 @@
     :root {
       --primary-color: #007bff;
       --secondary-color: #28a745;
+      --accent-color: #17a2b8;
       --background-color: #f4f6f9;
-      --card-background: #ffffff;
+      --card-bg: #ffffff;
       --text-color: #333333;
       --border-color: #cccccc;
     }
@@ -26,21 +27,51 @@
     }
 
     .container {
-      max-width: 700px;
-      background: var(--card-background);
+      max-width: 800px;
+      background: var(--card-bg);
       margin: 20px auto;
       padding: 30px;
       border-radius: 8px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
+    /* Navigation Tabs */
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 25px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     h2 {
       text-align: center;
+      margin-bottom: 20px;
       color: var(--text-color);
-      margin-bottom: 25px;
-      font-weight: 600;
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 10px;
     }
 
     .section-title {
@@ -54,7 +85,7 @@
     }
 
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 15px;
     }
 
     .form-row {
@@ -95,6 +126,16 @@
       cursor: not-allowed;
     }
 
+    /* Subject Section Styling */
+    .subject-row {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border: 1px solid #e2e2e2;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
     .btn {
       width: 100%;
       padding: 14px;
@@ -113,104 +154,199 @@
       background-color: #218838;
     }
 
-    #statusMessage {
+    .btn-add {
+      background-color: var(--accent-color);
+      margin-bottom: 15px;
+    }
+
+    .btn-add:hover {
+      background-color: #138496;
+    }
+
+    /* Results Table Styling */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .results-table th, .results-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .results-table th {
+      background-color: #f2f2f2;
+      color: #333;
+    }
+
+    #statusMessage, #checkStatus {
       text-align: center;
       font-weight: bold;
-      margin-top: 20px;
-      min-height: 25px;
+      margin-top: 15px;
       font-size: 15px;
+    }
+
+    /* Print styling for student results */
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; padding: 0; }
+      .tabs, .btn, #studentForm, .search-box { display: none; }
+      #resultDisplay { display: block; }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>Enter Student Results</h2>
-  
-  <form id="studentForm">
-    <div class="section-title">Student Identity</div>
-    
-    <div class="form-row">
-      <div class="form-group">
-        <label for="studentId">Student ID *</label>
-        <input type="text" id="studentId" placeholder="e.g. STU-101" required>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('entry')">Teacher Entry Portal</button>
+    <button class="tab-btn" onclick="switchTab('checking')">Student Result Checker</button>
+  </div>
+
+  <div id="entryTab" class="tab-content active">
+    <h2>Enter Student Records</h2>
+    <form id="studentForm">
+      <div class="section-title">Student Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="studentId">Student ID *</label>
+          <input type="text" id="studentId" placeholder="e.g. STU-101" required>
+        </div>
+        <div class="form-group">
+          <label for="studentName">Student Name *</label>
+          <input type="text" id="studentName" placeholder="Full Name" required>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="studentName">Student Name *</label>
-        <input type="text" id="studentName" placeholder="Full Name" required>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="studentClass">Class *</label>
+          <input type="text" id="studentClass" placeholder="e.g. JSS1" required>
+        </div>
+        <div class="form-group">
+          <label for="term">Term *</label>
+          <select id="term">
+            <option value="First Term">First Term</option>
+            <option value="Second Term">Second Term</option>
+            <option value="Third Term">Third Term</option>
+          </select>
+        </div>
       </div>
+
+      <div class="section-title">Academic Scores</div>
+      <div id="subjectsContainer">
+        <div class="subject-row">
+          <div class="form-group">
+            <label>Subject *</label>
+            <input type="text" class="subject-input" placeholder="e.g. Mathematics" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>CA Score</label>
+              <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+            </div>
+            <div class="form-group">
+              <label>Exam Score</label>
+              <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Total Score</label>
+              <input type="number" class="total-input" readonly placeholder="Auto">
+            </div>
+            <div class="form-group">
+              <label>Grade</label>
+              <input type="text" class="grade-input" readonly placeholder="Auto">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-add" onclick="addNewSubjectRow()">➕ Add Another Subject</button>
+
+      <div class="form-group">
+        <label for="remark">Teacher Remark</label>
+        <textarea id="remark" rows="3" placeholder="Add comment..."></textarea>
+      </div>
+
+      <button type="button" class="btn" onclick="saveRecord()">Save Records to Database</button>
+    </form>
+    <p id="statusMessage"></p>
+  </div>
+
+
+  <div id="checkingTab" class="tab-content">
+    <h2>Check Your Result</h2>
+    <div class="search-box" style="background: #e9ecef; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
+      <div class="form-group">
+        <label for="searchStudentId">Enter Your Student ID</label>
+        <input type="text" id="searchStudentId" placeholder="e.g. STU-101">
+      </div>
+      <button type="button" class="btn" onclick="checkStudentResult()" style="background-color: var(--primary-color);">View Result</button>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label for="studentClass">Class *</label>
-        <input type="text" id="studentClass" placeholder="e.g. JSS1" required>
+    <p id="checkStatus"></p>
+
+    <div id="resultDisplay" style="display: none;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h3 id="resStudentName" style="margin: 0; color: #333;"></h3>
+        <p id="resStudentInfo" style="margin: 5px 0; font-size: 16px; color: #666;"></p>
       </div>
-      <div class="form-group">
-        <label for="term">Term *</label>
-        <select id="term">
-          <option value="First Term">First Term</option>
-          <option value="Second Term">Second Term</option>
-          <option value="Third Term">Third Term</option>
-        </select>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>CA</th>
+            <th>Exam</th>
+            <th>Total</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTableBody">
+          </tbody>
+      </table>
+
+      <div style="margin-top: 20px;">
+        <p><strong>Teacher's Remark:</strong> <span id="resRemark"></span></p>
       </div>
+
+      <button type="button" class="btn" onclick="window.print()" style="background-color: #6c757d; margin-top: 20px;">🖨️ Print Result Slip</button>
     </div>
-
-    <div class="section-title">Academic Scores</div>
-
-    <div class="form-group">
-      <label for="subject">Subject *</label>
-      <input type="text" id="subject" placeholder="e.g. Mathematics" required>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="caScore">CA Score (Continuous Assessment)</label>
-        <input type="number" id="caScore" min="0" max="100" placeholder="0" oninput="calculateTotal()" required>
-      </div>
-      <div class="form-group">
-        <label for="examScore">Examination Score</label>
-        <input type="number" id="examScore" min="0" max="100" placeholder="0" oninput="calculateTotal()" required>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="totalScore">Total Score</label>
-        <input type="number" id="totalScore" readonly placeholder="Auto-calculated">
-      </div>
-      <div class="form-group">
-        <label for="grade">Grade</label>
-        <input type="text" id="grade" readonly placeholder="Auto-calculated">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="remark">Teacher Remark</label>
-      <textarea id="remark" rows="3" placeholder="Add a comment on performance..."></textarea>
-    </div>
-
-    <button type="button" class="btn" onclick="saveRecord()">Save Record to Database</button>
-  </form>
-
-  <p id="statusMessage"></p>
+  </div>
 </div>
 
 <script>
-  // Supabase Configuration
+  // Supabase connection keys
   const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
   const SUPABASE_KEY = "sb_publishable_4tR9wcZM3E9co59Xbg4nvQ_mI5ln";
-  
-  // Initialize the Supabase Client
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Auto-calculation logic for Total and Grade
-  function calculateTotal() {
-    const ca = parseFloat(document.getElementById('caScore').value) || 0;
-    const exam = parseFloat(document.getElementById('examScore').value) || 0;
+  // Tab switching function
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    if (tabName === 'entry') {
+      document.getElementById('entryTab').classList.add('active');
+      event.target.classList.add('active');
+    } else {
+      document.getElementById('checkingTab').classList.add('active');
+      event.target.classList.add('active');
+    }
+  }
+
+  // Auto calculate scores for subjects dynamically
+  function calculateSubjectTotal(inputElem) {
+    const parentRow = inputElem.closest('.subject-row');
+    const ca = parseFloat(parentRow.querySelector('.ca-input').value) || 0;
+    const exam = parseFloat(parentRow.querySelector('.exam-input').value) || 0;
     const total = ca + exam;
 
-    document.getElementById('totalScore').value = total;
+    parentRow.querySelector('.total-input').value = total;
 
     let grade = "";
     if (total >= 70) grade = "A";
@@ -220,70 +356,199 @@
     else if (total >= 40) grade = "E";
     else grade = "F";
 
-    document.getElementById('grade').value = grade;
+    parentRow.querySelector('.grade-input').value = grade;
   }
 
-  // Insert Record into the analysis Table
+  // Create a new subject line
+  function addNewSubjectRow() {
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'subject-row';
+    newRow.innerHTML = `
+      <div class="form-group">
+        <label>Subject *</label>
+        <input type="text" class="subject-input" placeholder="e.g. English" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CA Score</label>
+          <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+        </div>
+        <div class="form-group">
+          <label>Exam Score</label>
+          <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Total Score</label>
+          <input type="number" class="total-input" readonly placeholder="Auto">
+        </div>
+        <div class="form-group">
+          <label>Grade</label>
+          <input type="text" class="grade-input" readonly placeholder="Auto">
+        </div>
+      </div>
+      <button type="button" onclick="this.closest('.subject-row').remove()" style="color: red; border: none; background: none; font-size: 13px; cursor: pointer; float: right; margin-top: -10px;">❌ Remove Subject</button>
+    `;
+    subjectsContainer.appendChild(newRow);
+  }
+
+  // Push Multiple Subjects into Supabase at once
   async function saveRecord() {
     const statusMsg = document.getElementById('statusMessage');
-    
-    // Get field values
     const student_id = document.getElementById('studentId').value.trim();
     const student_name = document.getElementById('studentName').value.trim();
     const classVal = document.getElementById('studentClass').value.trim();
     const term = document.getElementById('term').value;
-    const subject = document.getElementById('subject').value.trim();
-    const ca_score = parseFloat(document.getElementById('caScore').value) || 0;
-    const exam_score = parseFloat(document.getElementById('examScore').value) || 0;
-    const total_score = parseFloat(document.getElementById('totalScore').value) || 0;
-    const grade = document.getElementById('grade').value;
     const remark = document.getElementById('remark').value.trim();
 
-    // Field Validation
-    if (!student_id || !student_name || !subject || !classVal) {
-      statusMsg.innerText = "❌ Please fill out all required fields marked with an asterisk (*)";
+    if (!student_id || !student_name || !classVal) {
+      statusMsg.innerText = "❌ Please fill out all required basic student fields!";
       statusMsg.style.color = "red";
       return;
     }
 
-    statusMsg.innerText = "Connecting to database and saving record...";
+    // Process all subject entries
+    const rows = document.querySelectorAll('.subject-row');
+    const insertPayload = [];
+
+    for (let row of rows) {
+      const subject = row.querySelector('.subject-input').value.trim();
+      const ca_score = parseFloat(row.querySelector('.ca-input').value) || 0;
+      const exam_score = parseFloat(row.querySelector('.exam-input').value) || 0;
+      const total_score = parseFloat(row.querySelector('.total-input').value) || 0;
+      const grade = row.querySelector('.grade-input').value;
+
+      if (!subject) {
+        statusMsg.innerText = "❌ Please enter a name for all added subjects.";
+        statusMsg.style.color = "red";
+        return;
+      }
+
+      insertPayload.push({
+        student_id,
+        student_name,
+        class: classVal,
+        term,
+        subject,
+        ca_score,
+        exam_score,
+        total_score,
+        grade,
+        remark
+      });
+    }
+
+    statusMsg.innerText = "Saving records to database...";
     statusMsg.style.color = "#007bff";
 
-    // Data object to perfectly match the analysis table columns
-    const insertPayload = {
-      student_id: student_id,
-      student_name: student_name,
-      class: classVal,
-      term: term,
-      subject: subject,
-      ca_score: ca_score,
-      exam_score: exam_score,
-      total_score: total_score,
-      grade: grade,
-      remark: remark
-    };
+    try {
+      const { error } = await supabaseClient
+        .from('analysis')
+        .insert(insertPayload);
+
+      if (error) throw error;
+
+      statusMsg.innerText = "✅ Student records successfully saved to the database!";
+      statusMsg.style.color = "green";
+
+      // Reset Form
+      document.getElementById('studentForm').reset();
+      document.getElementById('subjectsContainer').innerHTML = `
+        <div class="subject-row">
+          <div class="form-group">
+            <label>Subject *</label>
+            <input type="text" class="subject-input" placeholder="e.g. Mathematics" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>CA Score</label>
+              <input type="number" class="ca-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+            </div>
+            <div class="form-group">
+              <label>Exam Score</label>
+              <input type="number" class="exam-input" min="0" max="100" placeholder="0" oninput="calculateSubjectTotal(this)">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Total Score</label>
+              <input type="number" class="total-input" readonly placeholder="Auto">
+            </div>
+            <div class="form-group">
+              <label>Grade</label>
+              <input type="text" class="grade-input" readonly placeholder="Auto">
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      console.error(err);
+      statusMsg.innerText = "❌ Error: " + err.message;
+      statusMsg.style.color = "red";
+    }
+  }
+
+  // Fetch Results from database for a student ID
+  async function checkStudentResult() {
+    const studentIdInput = document.getElementById('searchStudentId').value.trim();
+    const checkStatus = document.getElementById('checkStatus');
+    const resultDisplay = document.getElementById('resultDisplay');
+    const tbody = document.getElementById('resultsTableBody');
+
+    if (!studentIdInput) {
+      checkStatus.innerText = "❌ Please enter a valid Student ID.";
+      checkStatus.style.color = "red";
+      return;
+    }
+
+    checkStatus.innerText = "Searching database...";
+    checkStatus.style.color = "#007bff";
+    resultDisplay.style.display = "none";
+    tbody.innerHTML = "";
 
     try {
       const { data, error } = await supabaseClient
         .from('analysis')
-        .insert([insertPayload]);
+        .select('*')
+        .eq('student_id', studentIdInput);
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        checkStatus.innerText = "❌ No results found for this ID.";
+        checkStatus.style.color = "red";
+        return;
       }
 
-      statusMsg.innerText = "✅ Student record successfully saved to the database!";
-      statusMsg.style.color = "green";
-      
-      // Clear out form for next entry
-      document.getElementById('studentForm').reset();
-      document.getElementById('totalScore').value = "";
-      document.getElementById('grade').value = "";
-      
+      // Populate results metadata
+      const firstRecord = data[0];
+      document.getElementById('resStudentName').innerText = firstRecord.student_name;
+      document.getElementById('resStudentInfo').innerText = `Class: ${firstRecord.class} | Term: ${firstRecord.term}`;
+      document.getElementById('resRemark').innerText = firstRecord.remark || "N/A";
+
+      // Populate Results Rows
+      data.forEach(item => {
+        const row = `
+          <tr>
+            <td>${item.subject}</td>
+            <td>${item.ca_score || 0}</td>
+            <td>${item.exam_score || 0}</td>
+            <td>${item.total_score || 0}</td>
+            <td>${item.grade || 'N/A'}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+
+      checkStatus.innerText = "";
+      resultDisplay.style.display = "block";
+
     } catch (err) {
-      console.error("Database Error: ", err);
-      statusMsg.innerText = "❌ Error saving to Supabase: " + (err.message || err);
-      statusMsg.style.color = "red";
+      console.error(err);
+      checkStatus.innerText = "❌ Error fetching results: " + err.message;
+      checkStatus.style.color = "red";
     }
   }
 </script>
