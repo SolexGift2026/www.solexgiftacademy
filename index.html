@@ -8,72 +8,117 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    :root {
+      --primary-color: #007bff;
+      --secondary-color: #28a745;
+      --background-color: #f4f6f9;
+      --card-background: #ffffff;
+      --text-color: #333333;
+      --border-color: #cccccc;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
       margin: 0;
       padding: 20px;
+      color: var(--text-color);
     }
+
     .container {
       max-width: 700px;
-      background: #ffffff;
-      margin: 0 auto;
-      padding: 25px;
+      background: var(--card-background);
+      margin: 20px auto;
+      padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
+
     h2 {
       text-align: center;
-      color: #333;
-      margin-bottom: 20px;
+      color: var(--text-color);
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
     }
+
+    .section-title {
+      font-size: 1.1em;
+      color: var(--primary-color);
+      margin-top: 20px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
     .form-row {
       display: flex;
       gap: 15px;
-      margin-bottom: 15px;
     }
-    .form-group {
+
+    .form-row .form-group {
       flex: 1;
-      margin-bottom: 15px;
     }
+
     label {
       display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-      color: #555;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #555555;
+      font-size: 14px;
     }
+
     input, select, textarea {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       box-sizing: border-box;
       font-size: 15px;
+      background-color: #fafafa;
     }
-    input:focus, select:focus {
-      border-color: #007bff;
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary-color);
+      background-color: #ffffff;
       outline: none;
     }
+
+    input[readonly] {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+
     .btn {
       width: 100%;
-      padding: 12px;
-      background-color: #28a745;
+      padding: 14px;
+      background-color: var(--secondary-color);
       color: white;
       font-size: 16px;
       font-weight: bold;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background 0.2s ease;
+      margin-top: 10px;
     }
+
     .btn:hover {
       background-color: #218838;
     }
+
     #statusMessage {
       text-align: center;
       font-weight: bold;
-      margin-top: 15px;
-      min-height: 20px;
+      margin-top: 20px;
+      min-height: 25px;
+      font-size: 15px;
     }
   </style>
 </head>
@@ -83,148 +128,90 @@
   <h2>Enter Student Results</h2>
   
   <form id="studentForm">
+    <div class="section-title">Student Identity</div>
+    
     <div class="form-row">
       <div class="form-group">
-        <label for="studentId">Student ID</label>
+        <label for="studentId">Student ID *</label>
         <input type="text" id="studentId" placeholder="e.g. STU-101" required>
       </div>
       <div class="form-group">
-        <label for="studentName">Student Name</label>
+        <label for="studentName">Student Name *</label>
         <input type="text" id="studentName" placeholder="Full Name" required>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label for="gender">Gender</label>
-        <select id="gender">
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
+        <label for="studentClass">Class *</label>
+        <input type="text" id="studentClass" placeholder="e.g. JSS1" required>
       </div>
       <div class="form-group">
-        <label for="age">Age</label>
-        <input type="number" id="age" min="1" max="100">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="schoolName">School Name</label>
-        <input type="text" id="schoolName" placeholder="Name of School">
-      </div>
-      <div class="form-group">
-        <label for="classname">Class</label>
-        <input type="text" id="classname" placeholder="e.g. JSS 1" required>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="term">Term</label>
+        <label for="term">Term *</label>
         <select id="term">
           <option value="First Term">First Term</option>
           <option value="Second Term">Second Term</option>
           <option value="Third Term">Third Term</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="session">Session</label>
-        <input type="text" id="session" placeholder="e.g. 2025/2026">
-      </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label for="email">Parent Email</label>
-        <input type="email" id="email" placeholder="parent@example.com">
-      </div>
-      <div class="form-group">
-        <label for="phone">Parent Phone</label>
-        <input type="tel" id="phone" placeholder="e.g. 08012345678">
-      </div>
-    </div>
+    <div class="section-title">Academic Scores</div>
 
     <div class="form-group">
-      <label for="subject">Subject</label>
+      <label for="subject">Subject *</label>
       <input type="text" id="subject" placeholder="e.g. Mathematics" required>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label for="ca1">CA 1 Score</label>
-        <input type="number" id="ca1" min="0" max="100" oninput="calculateTotal()">
+        <label for="caScore">CA Score (Continuous Assessment)</label>
+        <input type="number" id="caScore" min="0" max="100" placeholder="0" oninput="calculateTotal()" required>
       </div>
       <div class="form-group">
-        <label for="ca2">CA 2 Score</label>
-        <input type="number" id="ca2" min="0" max="100" oninput="calculateTotal()">
-      </div>
-      <div class="form-group">
-        <label for="ca3">CA 3 Score</label>
-        <input type="number" id="ca3" min="0" max="100" oninput="calculateTotal()">
+        <label for="examScore">Examination Score</label>
+        <input type="number" id="examScore" min="0" max="100" placeholder="0" oninput="calculateTotal()" required>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label for="exam">Exam Score</label>
-        <input type="number" id="exam" min="0" max="100" oninput="calculateTotal()">
-      </div>
-      <div class="form-group">
-        <label for="total">Total Score</label>
-        <input type="number" id="total" readonly style="background: #e9ecef;">
+        <label for="totalScore">Total Score</label>
+        <input type="number" id="totalScore" readonly placeholder="Auto-calculated">
       </div>
       <div class="form-group">
         <label for="grade">Grade</label>
-        <input type="text" id="grade" placeholder="Calculated" readonly style="background: #e9ecef;">
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="neatness">Neatness</label>
-        <input type="text" id="neatness" placeholder="e.g. Excellent">
-      </div>
-      <div class="form-group">
-        <label for="obedience">Obedience</label>
-        <input type="text" id="obedience" placeholder="e.g. Very Good">
+        <input type="text" id="grade" readonly placeholder="Auto-calculated">
       </div>
     </div>
 
     <div class="form-group">
-      <label for="teacherRemark">Teacher Remark</label>
-      <textarea id="teacherRemark" rows="2" placeholder="Add comment on performance..."></textarea>
+      <label for="remark">Teacher Remark</label>
+      <textarea id="remark" rows="3" placeholder="Add a comment on performance..."></textarea>
     </div>
 
-    <div class="form-group">
-      <label for="principalName">Principal Name</label>
-      <input type="text" id="principalName" placeholder="Principal's Name">
-    </div>
-
-    <button type="button" class="btn" onclick="saveRecord()">Save Student Record</button>
+    <button type="button" class="btn" onclick="saveRecord()">Save Record to Database</button>
   </form>
 
   <p id="statusMessage"></p>
 </div>
 
 <script>
-  // 1. UPDATE THESE TO YOUR ACTUAL PROJECT KEYS
-  const SUPABASE_URL = "YOUR_SUPABASE_URL";
-  const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+  // Supabase Configuration
+  const SUPABASE_URL = "https://phmdfcbnnsghvylrkcxi.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_4tR9wcZM3E9co59Xbg4nvQ_mI5ln";
   
+  // Initialize the Supabase Client
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Auto-calculate Total and Grade using all 3 CAs
+  // Auto-calculation logic for Total and Grade
   function calculateTotal() {
-    const ca1 = parseFloat(document.getElementById('ca1').value) || 0;
-    const ca2 = parseFloat(document.getElementById('ca2').value) || 0;
-    const ca3 = parseFloat(document.getElementById('ca3').value) || 0;
-    const exam = parseFloat(document.getElementById('exam').value) || 0;
-    
-    const total = ca1 + ca2 + ca3 + exam;
-    document.getElementById('total').value = total;
+    const ca = parseFloat(document.getElementById('caScore').value) || 0;
+    const exam = parseFloat(document.getElementById('examScore').value) || 0;
+    const total = ca + exam;
 
-    // Set the grading scale
+    document.getElementById('totalScore').value = total;
+
     let grade = "";
     if (total >= 70) grade = "A";
     else if (total >= 60) grade = "B";
@@ -236,67 +223,67 @@
     document.getElementById('grade').value = grade;
   }
 
-  // Insert complete student data to Supabase
+  // Insert Record into the analysis Table
   async function saveRecord() {
     const statusMsg = document.getElementById('statusMessage');
     
-    // Get fields
+    // Get field values
     const student_id = document.getElementById('studentId').value.trim();
     const student_name = document.getElementById('studentName').value.trim();
-    const gender = document.getElementById('gender').value;
-    const age = parseInt(document.getElementById('age').value) || null;
-    const school_name = document.getElementById('schoolName').value.trim();
-    const classname = document.getElementById('classname').value.trim();
+    const classVal = document.getElementById('studentClass').value.trim();
     const term = document.getElementById('term').value;
-    const session = document.getElementById('session').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    
     const subject = document.getElementById('subject').value.trim();
-    const ca1 = parseFloat(document.getElementById('ca1').value) || 0;
-    const ca2 = parseFloat(document.getElementById('ca2').value) || 0;
-    const ca3 = parseFloat(document.getElementById('ca3').value) || 0;
-    const exam = parseFloat(document.getElementById('exam').value) || 0;
-    const total = parseFloat(document.getElementById('total').value) || 0;
+    const ca_score = parseFloat(document.getElementById('caScore').value) || 0;
+    const exam_score = parseFloat(document.getElementById('examScore').value) || 0;
+    const total_score = parseFloat(document.getElementById('totalScore').value) || 0;
     const grade = document.getElementById('grade').value;
-    
-    const neatness = document.getElementById('neatness').value.trim();
-    const obedience = document.getElementById('obedience').value.trim();
-    const teacher_remark = document.getElementById('teacherRemark').value.trim();
-    const principal_name = document.getElementById('principalName').value.trim();
+    const remark = document.getElementById('remark').value.trim();
 
-    // Validation
-    if (!student_id || !student_name || !classname || !subject) {
-      statusMsg.innerText = "❌ Please fill out all required fields!";
+    // Field Validation
+    if (!student_id || !student_name || !subject || !classVal) {
+      statusMsg.innerText = "❌ Please fill out all required fields marked with an asterisk (*)";
       statusMsg.style.color = "red";
       return;
     }
 
-    statusMsg.innerText = "Saving data to Supabase...";
+    statusMsg.innerText = "Connecting to database and saving record...";
     statusMsg.style.color = "#007bff";
 
+    // Data object to perfectly match the analysis table columns
     const insertPayload = {
-      student_id, student_name, gender, age, school_name, classname, term, session, email, phone,
-      subject, ca1, ca2, ca3, exam, total, grade,
-      neatness, obedience, teacher_remark, principal_name
+      student_id: student_id,
+      student_name: student_name,
+      class: classVal,
+      term: term,
+      subject: subject,
+      ca_score: ca_score,
+      exam_score: exam_score,
+      total_score: total_score,
+      grade: grade,
+      remark: remark
     };
 
-    const { data, error } = await supabaseClient
-      .from('analysis')
-      .insert([insertPayload]);
+    try {
+      const { data, error } = await supabaseClient
+        .from('analysis')
+        .insert([insertPayload]);
 
-    if (error) {
-      console.error(error);
-      statusMsg.innerText = "❌ Error saving: " + error.message;
-      statusMsg.style.color = "red";
-    } else {
-      statusMsg.innerText = "✅ Student record successfully saved to database!";
+      if (error) {
+        throw error;
+      }
+
+      statusMsg.innerText = "✅ Student record successfully saved to the database!";
       statusMsg.style.color = "green";
       
-      // Clear form
+      // Clear out form for next entry
       document.getElementById('studentForm').reset();
-      document.getElementById('total').value = "";
+      document.getElementById('totalScore').value = "";
       document.getElementById('grade').value = "";
+      
+    } catch (err) {
+      console.error("Database Error: ", err);
+      statusMsg.innerText = "❌ Error saving to Supabase: " + (err.message || err);
+      statusMsg.style.color = "red";
     }
   }
 </script>
